@@ -6,13 +6,15 @@ var Location = function(info){
   this.types = info.types;
   this.rating = info.rating;
   this.count = info.count;
+  this.userUpvote = info.userUpvote;
+  this.userDownvote = info.userDownvote;
 };
 
 Location.prototype.postVote = function(vote) {
   var self = this;
   console.log(self);
   $.ajax({
-    url: "http://localhost:3000/votes/",
+    url: "http://127.0.0.1:3000/votes/",
     type: "POST",
     dataType: "json",
     data: {
@@ -23,14 +25,19 @@ Location.prototype.postVote = function(vote) {
   }).then(function(res){
     //TODO: refactor out below since in code in script.js
     //TODO: fix so will update both categories
-    session.needReload = true;
-    session.loadLocations().then(function(data){
-      session.createLocationViews();
-    });
+    session.reload();
   })
   .fail(function(){
     alert('FAILRUE');
   });
+};
+
+Location.prototype.getDetails = function(){
+  var self = this;
+  var request = $.getJSON("http://localhost:3000/locations/" + self.id).then(function(err,data){
+    console.log('details', data);
+  });
+  return request;
 };
 
 Location.fetch = function(type){
@@ -44,7 +51,7 @@ Location.fetch = function(type){
     return;
   }
 
-  var request = $.getJSON("http://localhost:3000/locations/", {
+  var request = $.getJSON("http://127.0.0.1:3000/locations/", {
     lat: lat,
     long: long,
     type: type
@@ -54,7 +61,9 @@ Location.fetch = function(type){
     var venues = res;
     var locations = [];
     for (var i = 0; i < venues.length; i++) {
-      locations.push(new Location(venues[i]));
+      var newLoc = new Location(venues[i]);
+      newLoc.getDetails();
+      locations.push(newLoc);
     }
     return locations;
   })
